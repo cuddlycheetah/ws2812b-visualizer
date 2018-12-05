@@ -36,7 +36,7 @@ var h,f,l,d=String.fromCharCode;t.exports={version:"2.1.2",encode:a,decode:u}},f
 //# sourceMappingURL=socket.io.js.map
 
 
-var socket = io('http://192.168.1.200:5563');
+var socket = io('http://192.168.1.200:5563'); // Beat Gateway => Datagram Broadcaster to ESP8266's
 socket.on('connect', function(){
 	console.log('connected')
 });
@@ -91,29 +91,22 @@ function hslToRgb(h, s, l) {
     return [Math.round(r * 255), Math.round(g * 255), Math.round(b * 255)];
 }
 var beatFunc = function(R, G, B) {
-    socket.emit('beat', R, G, B) // Beat Color Transmitter
-    //console.log(R, G, B)
-    // R, G, B
+    socket.emit('beat', R, G, B)
 }
-/*
-let script = document.createElement("script")
-script.type='text/javascript'
-script.src='https://konrad.sch.umann.it/socket.io.js'
-document.head.appendChild(script)*/
-
+let sliceAmount = 0
 function frameLooper() {
     
 	window.webkitRequestAnimationFrame(frameLooper)
 	fbc = new Uint8Array(analyser.frequencyBinCount)
     analyser.getByteFrequencyData(fbc)
     
-    fbc = fbc.slice(0, 90)
+    if (sliceAmount > 0)
+    fbc = fbc.slice(0, sliceAmount)
     
 
 	canvasContext.clearRect(0, 0, canvas.width, canvas.height)
     canvasContext.fillStyle = '#00CCFF'
     
-
     let cLen = Math.floor(fbc.length / 3)
     let dataR = fbc.slice(cLen * 0, cLen * 1)
     let dataG = fbc.slice(cLen * 1, cLen * 2)
@@ -133,7 +126,6 @@ function frameLooper() {
     L = Math.floor(  (Math.max(R,G,B) / 255)  * 100 )
     S = 100
     canvasContext.fillStyle = `hsl(${H},${S}%,${L}%)`
-    H = H * 1.5
 
     var rgb = hsvToRgb(H % 360 / 360, S / 100, L / 100)
     let RR = rgb[0]
@@ -153,10 +145,8 @@ function frameLooper() {
         bar_width = 4
         bar_height = -(fbc[i] / 2)
 		//bar_height = -( (fbc_array[i] / 2) + (fbc_array[i+1] / 2) + (fbc_array[i+2] / 2) + (fbc_array[i+2] / 3) ) / 4
-		//  fillRect( x, y, width, height ) // Explanation of the parameters below
 		canvasContext.fillRect(bar_x, canvas.height, bar_width, bar_height)
     }
-
 
     canvasContext.fillRect(512,16, 32, 32)
 }
