@@ -1,5 +1,22 @@
 
-var video, canvas, canvasContext, audioContext, analyser, source
+let sliceAmount = 0
+let sliceStart = 0
+let mode = 0
+var video, canvas, canvasContext, audioContext, analyser, source, sliceStartSlider, sliceAmountSlider
+function createSlider(min, max) {
+    let slider = document.createElement('input')
+    slider.type = 'range'
+    slider.min = min
+    slider.max = max
+    
+    return slider
+}
+function createCheckbox() {
+    let checkbox = document.createElement('input')
+    checkbox.type = 'checkbox'
+    checkbox.checked = val ? 'checked' : 'unchecked'
+    return checkbox
+}
 function initAnalyser() {
     canvas = document.createElement('canvas')
     
@@ -8,7 +25,31 @@ function initAnalyser() {
     canvas.style.width = '600px'
     canvas.style.height = '120px'
 
-    document.querySelector('.style-scope.ytd-video-primary-info-renderer').appendChild(canvas)
+    let videoPrimaryInfoRenderer = document.querySelector('.style-scope.ytd-video-primary-info-renderer')
+    
+    videoPrimaryInfoRenderer.appendChild(canvas)
+
+    modeSlider = createSlider(0, 3)
+    modeSlider.addEventListener("change", function() {
+        mode = Number(modeSlider.value)
+    })
+    videoPrimaryInfoRenderer.appendChild(modeSlider)
+    
+
+    sliceStartSlider = createSlider(0, 512)
+    sliceStartSlider.addEventListener("change", function() {
+        sliceStart = Number(sliceStartSlider.value)
+    })
+    videoPrimaryInfoRenderer.appendChild(sliceStartSlider)
+
+    sliceAmountSlider = createSlider(0, 512)
+    sliceAmountSlider.addEventListener("change", function() {
+        sliceAmount = Number(sliceAmountSlider.value)
+    })
+    videoPrimaryInfoRenderer.appendChild(sliceAmountSlider)
+    
+    
+
     video = document.querySelector('video')
 
     canvasContext = canvas.getContext('2d')
@@ -36,6 +77,7 @@ var h,f,l,d=String.fromCharCode;t.exports={version:"2.1.2",encode:a,decode:u}},f
 //# sourceMappingURL=socket.io.js.map
 
 
+
 var socket = io('http://192.168.1.200:5563'); // Beat Gateway => Datagram Broadcaster to ESP8266's
 socket.on('connect', function(){
 	console.log('connected')
@@ -45,6 +87,26 @@ socket.on('disconnect', function(){
   console.log('dis-connected')
 });
 
+
+/**
+ * Returns an array with arrays of the given size.
+ *
+ * @param myArray {Array} array to split
+ * @param chunk_size {Integer} Size of every group
+ */
+function chunkArray(myArray, chunk_size){
+    var index = 0;
+    var arrayLength = myArray.length;
+    var tempArray = [];
+    
+    for (index = 0; index < arrayLength; index += chunk_size) {
+        myChunk = myArray.slice(index, index+chunk_size);
+        // Do something if you want with the group
+        tempArray.push(myChunk);
+    }
+
+    return tempArray;
+}
 function hsvToRgb(h, s, v) {
     var r, g, b;
   
@@ -93,18 +155,48 @@ function hslToRgb(h, s, l) {
 var beatFunc = function(R, G, B) {
     socket.emit('beat', R, G, B)
 }
-let sliceAmount = 0
+
+function indexOfMax(arr) {
+    if (arr.length === 0) {
+        return -1
+    }
+
+    var max = arr[0]
+    var maxIndex = 0
+
+    for (var i = 1; i < arr.length; i++) {
+        if (Math.abs(arr[i]) > max) {
+            maxIndex = i
+            max = Math.abs(arr[i])
+        }
+    }
+
+    return maxIndex
+}
+let divideAmount = 128
 function frameLooper() {
     
 	window.webkitRequestAnimationFrame(frameLooper)
 	fbc = new Uint8Array(analyser.frequencyBinCount)
     analyser.getByteFrequencyData(fbc)
     
+
+    fbc = chunkArray(fbc, fbc.length / divideAmount)
+    fbc = fbc.reduce((prev, curr) => {
+        let currlength = curr.length
+        sumTogheter = curr.reduce((a,b) => a+b, 0) / currlength
+        prev.push(sumTogheter)
+        return prev
+    }, [])
+
+
     if (sliceAmount > 0)
-    fbc = fbc.slice(0, sliceAmount)
-    
+    fbc = fbc.slice(sliceStart, sliceAmount)
+    indexMax = indexOfMax(fbc)
 
 	canvasContext.clearRect(0, 0, canvas.width, canvas.height)
+    canvasContext.fillStyle = '#FFFFFF'
+    canvasContext.fillRect(512,0, canvas.width - 512, canvas.height)
     canvasContext.fillStyle = '#00CCFF'
     
     let cLen = Math.floor(fbc.length / 3)
@@ -122,7 +214,23 @@ function frameLooper() {
     G = Math.floor(G)
     B = Math.floor(B)
     
-    H = Math.floor(  ( (R + G + B) / 255*3 ) * 360  )
+    H1 = Math.floor(  ( (R + G + B) / 255*3 ) * 360  )
+    H2 = Math.floor( ( (R * 0.66 + G * 0.33 + B) / 508 ) * 360 )
+    if (mode == 2) {
+        HO = (H1 * 2 + H2 * 20) / 3
+    } else {
+        HO = H1
+    }
+
+    HO = HO + ( (indexMax / fbc.length) * 360 * 15)
+
+    H = HO // % 360
+    if (mode == 1) {
+        H = (indexMax / fbc.length) * 360 * 15 // % 360
+    }
+
+    //H = 
+
     L = Math.floor(  (Math.max(R,G,B) / 255)  * 100 )
     S = 100
     canvasContext.fillStyle = `hsl(${H},${S}%,${L}%)`
@@ -149,6 +257,13 @@ function frameLooper() {
     }
 
     canvasContext.fillRect(512,16, 32, 32)
+    
+    canvasContext.fillStyle = 'black'
+    canvasContext.font="12px Arial";
+    canvasContext.fillText('H1: ' + H1.toFixed(2), 512, 64)
+    canvasContext.fillText('H2: ' + H2.toFixed(2), 512, 80)
+    canvasContext.fillText('HO: ' + HO.toFixed(2), 512, 96)
+    canvasContext.fillText('H:  ' + indexMax, 512, 112)
 }
 
 window.webkitRequestAnimationFrame(initAnalyser)
