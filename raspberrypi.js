@@ -27,19 +27,6 @@ send([ 0x06, 255, 255, 255 ])
 
 server.listen(5563)
 
-var lgbt = [
-];
-
-for (let i=0;i < 10; i++) {
-    let newPattern = []
-    for (let j=0;j < rand(0,5);j++)
-        newPattern.push(rand(0, 64) * 4)
-    lgbt.push(newPattern)
-}
-
-
-//const net = require('net')
-
 function send(cmd) {
     let msg = new Buffer(cmd, 'hex')
     client.send(msg, 0, msg.length, PORT, HOST)
@@ -47,23 +34,3 @@ function send(cmd) {
 function rand(min, max) {
     return min + Math.floor(Math.random() * max)
 }
-//dynamicRainbow(1)
-/*
-setInterval(() => {
-    let first = rand(0, lgbt.length)
-    //if (first == 0)
-    //    send([0xff]);
-   // else {
-        lgbtPattern = lgbt[first]
-
-        patt = [0x04, lgbtPattern.length]
-        patt = patt.concat(lgbtPattern)
-        patt = patt.concat([
-            ((rand(0,2) * 10) + rand(0,2)),
-             rand(0, 100)
-        ])
-        send(patt)
-        console.log(patt)
-   // }
-}, 8) // Interval: 8-10ms
-*/
