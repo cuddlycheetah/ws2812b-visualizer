@@ -1,4 +1,4 @@
-
+let divideAmount = 128
 let sliceAmount = 0
 let sliceStart = 0
 let mode = 0
@@ -173,7 +173,12 @@ function indexOfMax(arr) {
 
     return maxIndex
 }
-let divideAmount = 128
+
+
+
+
+
+
 function frameLooper() {
     
 	window.webkitRequestAnimationFrame(frameLooper)
@@ -228,10 +233,12 @@ function frameLooper() {
     if (mode == 1) {
         H = (indexMax / fbc.length) * 360 * 15 // % 360
     }
-
+    L = Math.floor(  (Math.max(R,G,B) / 255)  * 100 )
+    if (mode == 3) {
+        H = L * 3.6 * 3 % 360
+    }
     //H = 
 
-    L = Math.floor(  (Math.max(R,G,B) / 255)  * 100 )
     S = 100
     canvasContext.fillStyle = `hsl(${H},${S}%,${L}%)`
 
@@ -260,10 +267,12 @@ function frameLooper() {
     
     canvasContext.fillStyle = 'black'
     canvasContext.font="12px Arial";
+    canvasContext.fillText('M:  ' + mode, 512, 12)
     canvasContext.fillText('H1: ' + H1.toFixed(2), 512, 64)
     canvasContext.fillText('H2: ' + H2.toFixed(2), 512, 80)
     canvasContext.fillText('HO: ' + HO.toFixed(2), 512, 96)
-    canvasContext.fillText('H:  ' + indexMax, 512, 112)
+    canvasContext.fillText('H:  ' + H, 512, 112)
+    canvasContext.fillText('L:  ' + L, 512 + 48, 112)
 }
 
 window.webkitRequestAnimationFrame(initAnalyser)
