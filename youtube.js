@@ -1,62 +1,99 @@
-let divideAmount = 128
-let sliceAmount = 0
-let sliceStart = 0
-let mode = 0
-var video, canvas, canvasContext, audioContext, analyser, source, sliceStartSlider, sliceAmountSlider
+var mode = 0, divideAmount = 128
+var sliceStart = 0, sliceAmount = 0
+
+var mediaElement, controlBox, canvas, canvasContext, audioContext, analyser, source, sliceStartSlider, sliceAmountSlider
 function createSlider(min, max) {
     let slider = document.createElement('input')
-    slider.type = 'range'
-    slider.min = min
-    slider.max = max
+        slider.type = 'range'
+        slider.min = min
+        slider.max = max
     
     return slider
 }
-function createCheckbox() {
-    let checkbox = document.createElement('input')
-    checkbox.type = 'checkbox'
-    checkbox.checked = val ? 'checked' : 'unchecked'
-    return checkbox
+function createText(value) {
+    let text = document.createElement('text')
+        text.innerText = value
+        text.style.color = 'red'
+        text.style.fontSize = '15px'
+    return text
+}
+function createCanvas(w, h) {
+    let canvas = document.createElement('canvas')
+        canvas.width = w
+        canvas.height = h
+        canvas.style.width = w + 'px'
+        canvas.style.height = h + 'px'
+    return canvas
 }
 function initAnalyser() {
-    canvas = document.createElement('canvas')
+    controlBox = document.createElement("div")
+        controlBox.style.marginTop = "20px"
+    canvas = createCanvas(600, 120)
     
-    canvas.width = 600
-    canvas.height = 120
-    canvas.style.width = '600px'
-    canvas.style.height = '120px'
-
-    let videoPrimaryInfoRenderer = document.querySelector('.style-scope.ytd-video-primary-info-renderer')
     
-    videoPrimaryInfoRenderer.appendChild(canvas)
 
     modeSlider = createSlider(0, 3)
-    modeSlider.addEventListener("change", function() {
-        mode = Number(modeSlider.value)
-    })
-    videoPrimaryInfoRenderer.appendChild(modeSlider)
+        modeSlider.addEventListener("change", function() {
+            mode = Number(modeSlider.value)
+        })
+    
+    divideAmountSlider = createSlider(1, 1024 / 32)
+        divideAmountSlider.addEventListener("change", function() {
+            divideAmount = Number(divideAmountSlider.value) * (1024 / 32)
+        })
     
 
     sliceStartSlider = createSlider(0, 512)
-    sliceStartSlider.addEventListener("change", function() {
-        sliceStart = Number(sliceStartSlider.value)
-    })
-    videoPrimaryInfoRenderer.appendChild(sliceStartSlider)
+        sliceStartSlider.addEventListener("change", function() {
+            sliceStart = Number(sliceStartSlider.value)
+        })
 
     sliceAmountSlider = createSlider(0, 512)
-    sliceAmountSlider.addEventListener("change", function() {
-        sliceAmount = Number(sliceAmountSlider.value)
-    })
-    videoPrimaryInfoRenderer.appendChild(sliceAmountSlider)
+        sliceAmountSlider.addEventListener("change", function() {
+            sliceAmount = Number(sliceAmountSlider.value)
+        })
     
+    // Control Box
+    controlBox.appendChild(canvas)
+        controlBox.appendChild(document.createElement('br'))
+
+
+    let sliderBox = document.createElement('div')
+        sliderBox.appendChild(createText('Mode: '))
+            sliderBox.appendChild(modeSlider)
+            sliderBox.appendChild(document.createElement('br'))
+
+        sliderBox.appendChild(createText('Dämpfer: '))
+            sliderBox.appendChild(divideAmountSlider)
+            sliderBox.appendChild(document.createElement('br'))
+        
+        sliderBox.appendChild(createText('Start: '))
+            sliderBox.appendChild(sliceStartSlider)
+            sliderBox.appendChild(document.createElement('br'))
+        
+        sliderBox.appendChild(createText('Ende: '))
+            sliderBox.appendChild(sliceAmountSlider)
+
+    controlBox.appendChild(sliderBox)
+
+    let appendixElement = document.querySelector('.style-scope.ytd-video-primary-info-renderer')
+    if (appendixElement == null)
+        appendixElement = document.querySelector('video')
+    if (appendixElement == null)
+        appendixElement = document.querySelector('audio')
+
+    appendixElement.appendChild(controlBox)
     
 
-    video = document.querySelector('video')
+    mediaElement = document.querySelector('video')
+    if (mediaElement == null)
+        mediaElement = document.querySelector('audio')
 
     canvasContext = canvas.getContext('2d')
     
     audioContext = new AudioContext()
 	analyser = audioContext.createAnalyser()
-	source = audioContext.createMediaElementSource(video)
+	source = audioContext.createMediaElementSource(mediaElement)
 	source.connect(analyser)
     analyser.connect(audioContext.destination)
     
@@ -155,7 +192,6 @@ function hslToRgb(h, s, l) {
 var beatFunc = function(R, G, B) {
     socket.emit('beat', R, G, B)
 }
-
 function indexOfMax(arr) {
     if (arr.length === 0) {
         return -1
@@ -174,85 +210,31 @@ function indexOfMax(arr) {
     return maxIndex
 }
 
-
-
-
-
-
-function frameLooper() {
-    
-	window.webkitRequestAnimationFrame(frameLooper)
-	fbc = new Uint8Array(analyser.frequencyBinCount)
+function analyserFetch() {
+    fbc = new Uint8Array(analyser.frequencyBinCount)
     analyser.getByteFrequencyData(fbc)
-    
-
-    fbc = chunkArray(fbc, fbc.length / divideAmount)
-    fbc = fbc.reduce((prev, curr) => {
-        let currlength = curr.length
-        sumTogheter = curr.reduce((a,b) => a+b, 0) / currlength
-        prev.push(sumTogheter)
-        return prev
-    }, [])
-
-
+}
+function analyserDampener() {
+    if( fbc.length != divideAmount) {
+        fbc = chunkArray(fbc, fbc.length / divideAmount)
+        fbc = fbc.reduce((prev, curr) => {
+            let currlength = curr.length
+            sumTogheter = curr.reduce((a,b) => a+b, 0) / currlength
+            prev.push(sumTogheter)
+            return prev
+        }, [])
+    }
+}
+function analyserFilter() {
     if (sliceAmount > 0)
-    fbc = fbc.slice(sliceStart, sliceAmount)
-    indexMax = indexOfMax(fbc)
-
+        fbc = fbc.slice(sliceStart, sliceAmount)
+}
+function renderBars(R, G, B) {
 	canvasContext.clearRect(0, 0, canvas.width, canvas.height)
     canvasContext.fillStyle = '#FFFFFF'
     canvasContext.fillRect(512,0, canvas.width - 512, canvas.height)
-    canvasContext.fillStyle = '#00CCFF'
-    
-    let cLen = Math.floor(fbc.length / 3)
-    let dataR = fbc.slice(cLen * 0, cLen * 1)
-    let dataG = fbc.slice(cLen * 1, cLen * 2)
-    let dataB = fbc.slice(cLen * 2, cLen * 3)
-    let R = 0, G = 0, B = 0
-    R = dataR.reduce((ret, x) => ret + x, 0) / dataR.length
-    G = dataG.reduce((ret, x) => ret + x, 0) / dataG.length
-    B = dataB.reduce((ret, x) => ret + x, 0) / dataB.length
-    if (isNaN(R)) R = 0
-    if (isNaN(G)) G = 0
-    if (isNaN(B)) B = 0
-    R = Math.floor(R)
-    G = Math.floor(G)
-    B = Math.floor(B)
-    
-    H1 = Math.floor(  ( (R + G + B) / 255*3 ) * 360  )
-    H2 = Math.floor( ( (R * 0.66 + G * 0.33 + B) / 508 ) * 360 )
-    if (mode == 2) {
-        HO = (H1 * 2 + H2 * 20) / 3
-    } else {
-        HO = H1
-    }
-
-    HO = HO + ( (indexMax / fbc.length) * 360 * 15)
-
-    H = HO // % 360
-    if (mode == 1) {
-        H = (indexMax / fbc.length) * 360 * 15 // % 360
-    }
-    L = Math.floor(  (Math.max(R,G,B) / 255)  * 100 )
-    if (mode == 3) {
-        H = L * 3.6 * 3 % 360
-    }
-    //H = 
-
-    S = 100
-    canvasContext.fillStyle = `hsl(${H},${S}%,${L}%)`
-
-    var rgb = hsvToRgb(H % 360 / 360, S / 100, L / 100)
-    let RR = rgb[0]
-    let GG = rgb[1]
-    let BB = rgb[2]
-    
-    canvasContext.fillStyle = `rgb(${RR},${GG},${BB})`
-    beatFunc(RR, GG, BB)
-
-    //console.log(`hsl(${H},${S}%,${L}%)`)
-    //console.log(`rgb(${RR},${GG},${BB})`)
-    //console.log(R, G, B)
+    //canvasContext.fillStyle = '#00CCFF'
+    canvasContext.fillStyle = `rgb(${R},${G},${B})`
 
 	bars = 100
 	for (var i = 0; i < bars; i++) {
@@ -264,7 +246,8 @@ function frameLooper() {
     }
 
     canvasContext.fillRect(512,16, 32, 32)
-    
+}
+function renderInfo(mode, H1, H2, HO, H, L) {
     canvasContext.fillStyle = 'black'
     canvasContext.font="12px Arial";
     canvasContext.fillText('M:  ' + mode, 512, 12)
@@ -273,6 +256,70 @@ function frameLooper() {
     canvasContext.fillText('HO: ' + HO.toFixed(2), 512, 96)
     canvasContext.fillText('H:  ' + H, 512, 112)
     canvasContext.fillText('L:  ' + L, 512 + 48, 112)
+}
+
+var cLen, dataF1, dataF2, dataF3, F1, F2, F3
+function frameLooper() {
+    window.webkitRequestAnimationFrame(frameLooper)
+    
+	analyserFetch()
+    analyserDampener()
+    analyserFilter() 
+
+    indexMax = indexOfMax(fbc)
+
+    
+    cLen = Math.floor(fbc.length / 3)
+    dataF1 = fbc.slice(cLen * 0, cLen * 1)
+    dataF2 = fbc.slice(cLen * 1, cLen * 2)
+    dataF3 = fbc.slice(cLen * 2, cLen * 3)
+
+    // let F1 = 0, F2 = 0, F3 = 0
+
+    F1 = dataF1.reduce((ret, x) => ret + x, 0) / dataF1.length
+    F2 = dataF2.reduce((ret, x) => ret + x, 0) / dataF2.length
+    F3 = dataF3.reduce((ret, x) => ret + x, 0) / dataF3.length
+
+    F1 = isNaN(F1) ? 0 : Math.floor(F1)
+    F2 = isNaN(F2) ? 0 : Math.floor(F2)
+    F3 = isNaN(F3) ? 0 : Math.floor(F3)
+    
+    H1 = Math.floor(  ( (F1 + F2 + F3) / 255 * 3 ) * 360  )
+    H2 = Math.floor( ( (F1 * 0.66 + F2 * 0.33 + F3) / 508 ) * 360 )
+    if (mode == 2) {
+        HO = (H1 * 2 + H2 * 20) / 3
+    } else {
+        HO = H1 * 2
+    }
+
+    HO = HO + ( (indexMax / fbc.length) * 360 * 15)
+
+    H = HO // % 360
+    if (mode == 1) {
+        H = (indexMax / fbc.length) * 360 * 15 // % 360
+    }
+    L = Math.floor(  (Math.max(F1,F2,F3) / 255)  * 100 )
+    if (mode == 3) {
+        H = L * 3.6 * 5 % 360
+    }
+    //H = 
+
+    S = 100
+    //canvasContext.fillStyle = `hsl(${H},${S}%,${L}%)`
+
+    var rgb = hsvToRgb(H % 360 / 360, S / 100, L / 100)
+    let R = rgb[0]
+    let G = rgb[1]
+    let B = rgb[2]
+    renderBars(R, G, B)
+    
+    
+    beatFunc(R, G, B)
+    renderInfo(mode, H1, H2, HO, H, L)
+    //console.log(`hsl(${H},${S}%,${L}%)`)
+    //console.log(`rgb(${RR},${GG},${BB})`)
+    //console.log(R, G, B)
+
 }
 
 window.webkitRequestAnimationFrame(initAnalyser)
