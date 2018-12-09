@@ -48,22 +48,25 @@ function initAnalyser() {
         modeSlider.addEventListener("change", function() {
             mode = Number(modeSlider.value)
         })
+        modeSlider.value = 3
     
     divideAmountSlider = createSlider(1, 1024 / 32)
         divideAmountSlider.addEventListener("change", function() {
             divideAmount = Number(divideAmountSlider.value) * (1024 / 32)
         })
+        divideAmountSlider.value = 1024
     
-
     sliceStartSlider = createSlider(0, 512)
         sliceStartSlider.addEventListener("change", function() {
             sliceStart = Number(sliceStartSlider.value)
         })
-
+        sliceStartSlider.value = 0
+    
     sliceAmountSlider = createSlider(0, 512)
         sliceAmountSlider.addEventListener("change", function() {
             sliceAmount = Number(sliceAmountSlider.value)
         })
+        sliceAmountSlider.value = 512
     
     // Control Box
     controlBox.appendChild(canvas)
@@ -83,6 +86,8 @@ function initAnalyser() {
             sliderBox.appendChild(divideAmountSlider)
             sliderBox.appendChild(document.createElement('br'))
         
+        sliderBox.appendChild(createText('Filterbank 2: '))
+            sliderBox.appendChild(document.createElement('br'))
         sliderBox.appendChild(createText('Start: '))
             sliderBox.appendChild(sliceStartSlider)
             sliderBox.appendChild(document.createElement('br'))
@@ -241,6 +246,20 @@ function analyserDampener() {
         }, [])
     }
 }
+
+function analyserPostDampener() {
+    fbc = chunkArray(fbc, fbc.length / 64)
+    fbc = fbc.reduce((prev, curr) => {
+        let currlength = curr.length
+        sumTogheter = curr.reduce((a,b) => a+b, 0) / currlength
+        prev.push(sumTogheter)
+        return prev
+    }, [])
+}
+function equalizerFunc() {
+    socket.emit('eq', fbc)
+}
+
 function analyserFilter() {
     if (sliceAmount > 0)
         fbc = fbc.slice(sliceStart, sliceAmount)
@@ -252,10 +271,10 @@ function renderBars(R, G, B) {
     //canvasContext.fillStyle = '#00CCFF'
     canvasContext.fillStyle = `rgb(${R},${G},${B})`
 
-	bars = 100
+	bars = 120
 	for (var i = 0; i < bars; i++) {
-		bar_x = i * 3
-        bar_width = 2
+		bar_x = i * 4
+        bar_width = 3
         bar_height = -(fbc[i] / 2)
 		//bar_height = -( (fbc_array[i] / 2) + (fbc_array[i+1] / 2) + (fbc_array[i+2] / 2) + (fbc_array[i+2] / 3) ) / 4
 		canvasContext.fillRect(bar_x, canvas.height, bar_width, bar_height)
@@ -333,6 +352,9 @@ function frameLooper() {
     
     beatFunc(R, G, B)
     renderInfo(mode, H1, H2, HO, H, L)
+
+    analyserPostDampener()
+    equalizerFunc()
     //console.log(`hsl(${H},${S}%,${L}%)`)
     //console.log(`rgb(${RR},${GG},${BB})`)
     //console.log(R, G, B)
