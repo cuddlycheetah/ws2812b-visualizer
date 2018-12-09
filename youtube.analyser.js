@@ -254,8 +254,8 @@ function renderBars(R, G, B) {
 
 	bars = 100
 	for (var i = 0; i < bars; i++) {
-		bar_x = i * 5
-        bar_width = 4
+		bar_x = i * 3
+        bar_width = 2
         bar_height = -(fbc[i] / 2)
 		//bar_height = -( (fbc_array[i] / 2) + (fbc_array[i+1] / 2) + (fbc_array[i+2] / 2) + (fbc_array[i+2] / 3) ) / 4
 		canvasContext.fillRect(bar_x, canvas.height, bar_width, bar_height)
