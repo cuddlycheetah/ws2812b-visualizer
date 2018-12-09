@@ -1,7 +1,8 @@
 var mode = 0, divideAmount = 128
 var sliceStart = 0, sliceAmount = 0
-
-var analyserEnabled, mediaElement, controlBox, canvas, canvasContext, audioContext, analyser, source, sliceStartSlider, sliceAmountSlider
+var checkBoxEnabled, analyserEnabled
+var sliceStartSlider, sliceAmountSlider
+var mediaElement, controlBox, canvas, canvasContext, audioContext, analyser, source
 function createSlider(min, max) {
     let slider = document.createElement('input')
         slider.type = 'range'
@@ -40,7 +41,7 @@ function initAnalyser() {
     
     checkBoxEnabled = createCheckbox(analyserEnabled)
         checkBoxEnabled.addEventListener('change', function() {
-            analyserEnabled = checkBoxEnabled.value == "1" ? true : false
+            analyserEnabled = checkBoxEnabled.checked
         })
 
     modeSlider = createSlider(0, 3)
