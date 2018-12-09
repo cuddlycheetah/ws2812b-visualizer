@@ -248,6 +248,7 @@ function analyserDampener() {
 }
 
 function analyserPostDampener() {
+    if (fbc.length <= 64) return
     fbc = chunkArray(fbc, fbc.length / 64)
     fbc = fbc.reduce((prev, curr) => {
         let currlength = curr.length
@@ -257,6 +258,14 @@ function analyserPostDampener() {
     }, [])
 }
 function equalizerFunc() {
+    if (fbc.length < 64) {
+        fbc = fbc.reduce( (prev, curr) => {
+            prev.push(curr)
+            prev.push(curr)
+            return prev
+        }, [])
+        socket.emit('eq', fbc)
+    } else
     socket.emit('eq', fbc)
 }
 
