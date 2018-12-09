@@ -18,10 +18,10 @@ function createText(value) {
         text.style.fontSize = '15px'
     return text
 }
-function createCheckbox(value) {
+function createCheckbox(checked) {
     let checkBox = document.createElement('input')
         checkBox.type = 'checkbox'
-        checkBox.value = value ? "1" : "0"
+        checkBox.checked = checked
     return checkBox
 }
 function createCanvas(w, h) {
