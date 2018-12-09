@@ -1,7 +1,7 @@
 var mode = 0, divideAmount = 128
 var sliceStart = 0, sliceAmount = 0
 
-var mediaElement, controlBox, canvas, canvasContext, audioContext, analyser, source, sliceStartSlider, sliceAmountSlider
+var analyserEnabled, mediaElement, controlBox, canvas, canvasContext, audioContext, analyser, source, sliceStartSlider, sliceAmountSlider
 function createSlider(min, max) {
     let slider = document.createElement('input')
         slider.type = 'range'
@@ -17,6 +17,12 @@ function createText(value) {
         text.style.fontSize = '15px'
     return text
 }
+function createCheckbox(value) {
+    let checkBox = document.createElement('input')
+        checkBox.type = 'checkbox'
+        checkBox.value = value ? "1" : "0"
+    return checkBox
+}
 function createCanvas(w, h) {
     let canvas = document.createElement('canvas')
         canvas.width = w
@@ -26,11 +32,16 @@ function createCanvas(w, h) {
     return canvas
 }
 function initAnalyser() {
+    analyserEnabled = true
+
     controlBox = document.createElement("div")
         controlBox.style.marginTop = "20px"
     canvas = createCanvas(600, 120)
     
-    
+    checkBoxEnabled = createCheckbox(analyserEnabled)
+        checkBoxEnabled.addEventListener('change', function() {
+            analyserEnabled = checkBoxEnabled.value == "1" ? true : false
+        })
 
     modeSlider = createSlider(0, 3)
         modeSlider.addEventListener("change", function() {
@@ -59,6 +70,10 @@ function initAnalyser() {
 
 
     let sliderBox = document.createElement('div')
+        sliderBox.appendChild(createText('Aktiv: '))
+            sliderBox.appendChild(checkBoxEnabled)
+            sliderBox.appendChild(document.createElement('br'))
+
         sliderBox.appendChild(createText('Mode: '))
             sliderBox.appendChild(modeSlider)
             sliderBox.appendChild(document.createElement('br'))
@@ -261,7 +276,8 @@ function renderInfo(mode, H1, H2, HO, H, L) {
 var cLen, dataF1, dataF2, dataF3, F1, F2, F3
 function frameLooper() {
     window.webkitRequestAnimationFrame(frameLooper)
-    
+    if (analyserEnabled == false) return
+
 	analyserFetch()
     analyserDampener()
     analyserFilter() 
