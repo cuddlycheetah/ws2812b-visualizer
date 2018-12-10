@@ -37,7 +37,7 @@ function initAnalyser() {
 
     controlBox = document.createElement("div")
         controlBox.style.marginTop = "20px"
-    canvas = createCanvas(600, 120)
+    canvas = createCanvas(600, 196)
     
     checkBoxEnabled = createCheckbox(analyserEnabled)
         checkBoxEnabled.addEventListener('change', function() {
@@ -273,6 +273,9 @@ function analyserFilter() {
     if (sliceAmount > 0)
         fbc = fbc.slice(sliceStart, sliceAmount)
 }
+Number.prototype.map = function (in_min, in_max, out_min, out_max) {
+    return (this - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
 function renderBars(R, G, B) {
 	canvasContext.clearRect(0, 0, canvas.width, canvas.height)
     canvasContext.fillStyle = '#FFFFFF'
@@ -282,11 +285,12 @@ function renderBars(R, G, B) {
 
 	bars = 120
 	for (var i = 0; i < bars; i++) {
+        if (fbc[i] === undefined) break;
 		bar_x = i * 4
         bar_width = 3
-        bar_height = -(fbc[i] / 2)
+        bar_height = fbc[i].map(0, 255,0, canvas.height) //-(fbc[i] / 2)
 		//bar_height = -( (fbc_array[i] / 2) + (fbc_array[i+1] / 2) + (fbc_array[i+2] / 2) + (fbc_array[i+2] / 3) ) / 4
-		canvasContext.fillRect(bar_x, canvas.height, bar_width, bar_height)
+		canvasContext.fillRect(bar_x, canvas.height, bar_width, -bar_height)
     }
 
     canvasContext.fillRect(512,16, 32, 32)
