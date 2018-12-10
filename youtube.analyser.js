@@ -248,8 +248,8 @@ function analyserDampener() {
 }
 
 function analyserPostDampener() {
-    if (fbc.length <= 64) return
-    fbc = chunkArray(fbc, fbc.length / 64)
+    if (fbc.length <= 32) return
+    fbc = chunkArray(fbc, fbc.length / 48)
     fbc = fbc.reduce((prev, curr) => {
         let currlength = curr.length
         sumTogheter = curr.reduce((a,b) => a+b, 0) / currlength
@@ -258,14 +258,14 @@ function analyserPostDampener() {
     }, [])
 }
 function equalizerFunc() {
-    if (fbc.length < 64) {
+    /*if (fbc.length < 32) {
         fbc = fbc.reduce( (prev, curr) => {
             prev.push(curr)
             prev.push(curr)
             return prev
         }, [])
         socket.emit('eq', fbc)
-    } else
+    } else*/
     socket.emit('eq', fbc)
 }
 
