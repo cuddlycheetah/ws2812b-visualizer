@@ -247,9 +247,10 @@ function analyserDampener() {
     }
 }
 
+
 function analyserPostDampener() {
-    if (fbc.length <= 32) return
-    fbc = chunkArray(fbc, fbc.length / 48)
+    //if (fbc.length <= 52) return
+    fbc = chunkArray(fbc, fbc.length / 62)
     fbc = fbc.reduce((prev, curr) => {
         let currlength = curr.length
         sumTogheter = curr.reduce((a,b) => a+b, 0) / currlength
