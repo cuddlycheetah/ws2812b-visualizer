@@ -136,7 +136,7 @@ var h,f,l,d=String.fromCharCode;t.exports={version:"2.1.2",encode:a,decode:u}},f
 
 
 
-var socket = io('http://192.168.1.200:5563'); // Beat Gateway => Datagram Broadcaster to ESP8266's
+var socket = io('https://192.168.1.200:5563', {secure: true}); // Beat Gateway => Datagram Broadcaster to ESP8266's
 socket.on('connect', function(){
 	console.log('connected')
 });
