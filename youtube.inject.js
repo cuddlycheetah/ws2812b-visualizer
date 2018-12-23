@@ -303,11 +303,12 @@ function renderInfo(mode, H1, H2, HO, H, L) {
     canvasContext.fillText('H1: ' + H1.toFixed(2), 512, 64)
     canvasContext.fillText('H2: ' + H2.toFixed(2), 512, 80)
     canvasContext.fillText('HO: ' + HO.toFixed(2), 512, 96)
-    canvasContext.fillText('H:  ' + H, 512, 112)
+    canvasContext.fillText('H:  ' + H.toFixed(0), 512, 112)
     canvasContext.fillText('L:  ' + L, 512 + 48, 112)
 }
 
 var cLen, dataF1, dataF2, dataF3, F1, F2, F3
+
 function frameLooper() {
     window.webkitRequestAnimationFrame(frameLooper)
     if (analyserEnabled == false) return
@@ -326,10 +327,15 @@ function frameLooper() {
 
     // let F1 = 0, F2 = 0, F3 = 0
 
-    F1 = dataF1.reduce((ret, x) => ret + x, 0) / dataF1.length
-    F2 = dataF2.reduce((ret, x) => ret + x, 0) / dataF2.length
-    F3 = dataF3.reduce((ret, x) => ret + x, 0) / dataF3.length
-
+    if (mode == 2) {
+        F1 = dataF1.reduce((ret, x) => ret + (x*1.75), 0) / dataF1.length
+        F2 = dataF2.reduce((ret, x) => ret + (x/2), 0) / dataF2.length
+        F3 = dataF3.reduce((ret, x) => ret + (x/2), 0) / dataF3.length
+    } else {
+        F1 = dataF1.reduce((ret, x) => ret + x, 0) / dataF1.length
+        F2 = dataF2.reduce((ret, x) => ret + x, 0) / dataF2.length
+        F3 = dataF3.reduce((ret, x) => ret + x, 0) / dataF3.length
+    }
     F1 = isNaN(F1) ? 0 : Math.floor(F1)
     F2 = isNaN(F2) ? 0 : Math.floor(F2)
     F3 = isNaN(F3) ? 0 : Math.floor(F3)
