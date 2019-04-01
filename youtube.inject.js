@@ -380,9 +380,9 @@ function frameLooper() {
 
     S = 100
     //canvasContext.fillStyle = `hsl(${H},${S}%,${L}%)`
-    if (F3 - $F3 > F1T) { console.log("3"); ColorWheel+=CWF1 }
-    else if (F2 - $F2 > F2T) { console.log("2"); ColorWheel+=CWF2 }
-    else if (F1 - $F1 > F3T) { console.log("1"); ColorWheel+=CWF3 }
+    if (Math.abs(F3 - $F3) > F1T) { console.log("3"); ColorWheel+=CWF3*(F3 - $F3 > 0 ? 1 : -0.5) }
+    else if (Math.abs(F2 - $F2) > F2T) { console.log("2"); ColorWheel+=CWF2*(F2 - $F2 > 0 ? 1 : -0.5) }
+    else if (Math.abs(F1 - $F1) > F3T) { console.log("1"); ColorWheel+=CWF1*(F1 - $F1 > 0 ? 1 : -0.5) }
     
     var rgb = hsvToRgb(H % 360 / 360, S / 100, L / 100)
     let R = rgb[0]
