@@ -44,7 +44,7 @@ function initAnalyser() {
             analyserEnabled = checkBoxEnabled.checked
         })
 
-    modeSlider = createSlider(0, 3)
+    modeSlider = createSlider(0, 4)
         modeSlider.addEventListener("change", function() {
             mode = Number(modeSlider.value)
         })
@@ -308,13 +308,25 @@ function renderInfo(mode, H1, H2, HO, H, L) {
     canvasContext.fillText('F1:  ' + F1, 512, 112+16)
     canvasContext.fillText('F2:  ' + F2, 512, 112+32)
     canvasContext.fillText('F3:  ' + F3, 512, 112+48)
+    canvasContext.fillText('CW:  ' + ColorWheel, 512, 112+64)
 }
 
 var cLen, dataF1, dataF2, dataF3, F1, F2, F3
+var $F1, $F2, $F3
+var ColorWheel = 0
+var CWF1 = 50
+var CWF2 = 80
+var CWF3 = 100
+var F1T = 8
+var F2T = 8
+var F3T = 8
 
 function frameLooper() {
     window.webkitRequestAnimationFrame(frameLooper)
     if (analyserEnabled == false) return
+    $F1 = F1
+    $F2 = F2
+    $F3 = F3
 
 	analyserFetch()
     analyserDampener()
@@ -354,18 +366,24 @@ function frameLooper() {
     HO = HO + ( (indexMax / fbc.length) * 360 * 15)
 
     H = HO // % 360
-    if (mode == 1) {
+    if (mode == 1 || mode == 4) {
         H = (indexMax / fbc.length) * 360 * 15 // % 360
     }
     L = Math.floor(  (Math.max(F1,F2,F3) / 255)  * 100 )
     if (mode == 3) {
-        H = L * 3.6 * 5 % 360
+        H = ColorWheel + (L * 3.6 * 5 % 360)
+    }
+    if (mode == 4) {
+        H = ColorWheel % 360 + (L * 3.6)
     }
     //H = 
 
     S = 100
     //canvasContext.fillStyle = `hsl(${H},${S}%,${L}%)`
-
+    if (F3 - $F3 > F1T) { console.log("3"); ColorWheel+=CWF1 }
+    else if (F2 - $F2 > F2T) { console.log("2"); ColorWheel+=CWF2 }
+    else if (F1 - $F1 > F3T) { console.log("1"); ColorWheel+=CWF3 }
+    
     var rgb = hsvToRgb(H % 360 / 360, S / 100, L / 100)
     let R = rgb[0]
     let G = rgb[1]
