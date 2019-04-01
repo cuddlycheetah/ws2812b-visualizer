@@ -305,6 +305,9 @@ function renderInfo(mode, H1, H2, HO, H, L) {
     canvasContext.fillText('HO: ' + HO.toFixed(2), 512, 96)
     canvasContext.fillText('H:  ' + H.toFixed(0), 512, 112)
     canvasContext.fillText('L:  ' + L, 512 + 48, 112)
+    canvasContext.fillText('F1:  ' + F1, 512, 112+16)
+    canvasContext.fillText('F2:  ' + F2, 512, 112+32)
+    canvasContext.fillText('F3:  ' + F3, 512, 112+48)
 }
 
 var cLen, dataF1, dataF2, dataF3, F1, F2, F3
